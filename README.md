@@ -2,7 +2,7 @@
 
 ### Intro
 
-I have built a File Retrieval Engine system which demonstrates the implementation of three important concepts of distributed systems: application layering, multithreading, and client-server architecture using gRPC for inter-process communication. While some of the source code was carried over from previous assignments where we built monolithic and multithreaded versions of the FileRetrieval Engine, this assignment transforms the system to use gRPC Remote Procedure Calls instead of POSIX sockets for client-server communication.
+I have built an Information Retrieval Engine system which demonstrates the implementation of three important concepts of distributed systems: application layering, multithreading, and client-server architecture using gRPC for inter-process communication. While some of the source code was carried over from previous projects where we built monolithic and multithreaded versions of the InformationRetrieval Engine, this project transforms the system to use gRPC Remote Procedure Calls instead of POSIX sockets for client-server communication.
 
 Implementing this assignment using gRPC provides several advantages over traditional socket-based communication. The use of Protocol Buffers for message definition makes the interface between client and server more structured and type-safe. The client remains responsible for accessing datasets and performing partial indexing, where datasets are divided based on the number of clients. Each client is treated as a thread, with the benchmark program managing multiple client threads for performance testing.
 
@@ -12,30 +12,12 @@ The server side maintains two critical data structures: DocumentMap and TermInve
 
 After cloning this repository you will need to follow a specific directory structure to run the program.
 
-Firstly, Enter into the directory of csc435-pa5-Osayd-ali by typing "cd csc435-pa5-Osayd-ali"
-
-Then enter into app-java directory: "cd app-java"
-
-Here, when you type "ls" you will be able to see datasets directory, java build file and src directory where my source code exists.
-
-You can acces my code if you want to by following the specific path: "cd src/main/java/csc435/app"
-
-After entering into the above path, type "ls" and you will find my source code files. If you wish to enter any source code file type "vi filename.java".
+* Enter into app-java directory: "cd app-java"
+* Here, when you type "ls" you will be able to see datasets directory, java build file and src directory where my source code exists.
+* You can acces my code if you want to by following the specific path: "cd src/main/java/csc435/app"
+* After entering into the above path, type "ls" and you will find my source code files. If you wish to enter any source code file type "vi filename.java".
 
 ### Requirements
-
-If you are implementing your solution in C++ you will need to have GCC 14.x and CMake 3.28.x installed on your system. You will also need to install Google Protocol Buffers (ProtoBuf) and gRPC libraries and development files. On Ubuntu 24.04 LTS you can install GCC and set it as default compiler using the following commands:
-
-```
-sudo apt install build-essential cmake g++-14 gcc-14 cmake
-sudo update-alternatives --remove-all gcc
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 130
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 140
-sudo update-alternatives --remove-all g++
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 130
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 140
-sudo apt install pkg-config protobuf-compiler libprotobuf-dev protobuf-compiler-grpc libgrpc++-dev
-```
 
 If you are implementing your solution in Java you will need to have Java 21.x and Maven 3.8.x installed on your systems. On Ubuntu 24.04 LTS you can install Java and Maven using the following commands:
 
