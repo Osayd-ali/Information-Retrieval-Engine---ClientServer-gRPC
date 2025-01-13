@@ -8,6 +8,152 @@ Implementing this project using gRPC provides several advantages over traditiona
 
 The server side maintains two critical data structures: DocumentMap and TermInvertedIndex. Instead of raw socket communication, the server now exposes two main gRPC services: computeIndex and computeSearch. When a client performs indexing, it sends the partial index to the server through the computeIndex RPC, and when searching, it uses the computeSearch RPC to query the server's global index. The server processes these RPCs by accessing and modifying its hashtables (DocumentMap and TermInvertedIndex) in a thread-safe manner.
 
+### System Design
+
+This class diagram illustrates the core architecture of the search engine system.
+
+```mermaid
+classDiagram
+    %% Benchmark Classes
+    class FileRetrievalBenchmark {
+        +main(String[] args) void$
+    }
+
+    class BenchmarkWorker {
+        -ClientProcessingEngine engine
+        -String datasetPath
+        -String serverIP
+        -String serverPort
+        +BenchmarkWorker(String serverIP, String serverPort, String datasetPath)
+        +run() void
+        +search(String query) void
+        +disconnect() void
+    }
+
+    %% Entry Points
+    class FileRetrievalServer {
+        +main(String[] args) void$
+    }
+
+    class FileRetrievalClient {
+        +main(String[] args) void$
+    }
+
+    %% Client-side Classes
+    class ClientAppInterface {
+        -ClientProcessingEngine engine
+        +ClientAppInterface(ClientProcessingEngine engine)
+        +readCommands() void
+    }
+
+    class ClientProcessingEngine {
+        -ManagedChannel channel
+        -FileRetrievalEngineBlockingStub stub
+        -int clientID
+        +ClientProcessingEngine(int clientID)
+        +connect(String serverIP, String serverPort) void
+        +disconnect() void
+        +IndexResult indexFiles(String folderPath)
+        +SearchResult searchFiles(ArrayList~String~ terms)
+        -HashMap~String,Long~ getWordFrequencies(String filePath)
+    }
+
+    %% Server-side Classes
+    class ServerAppInterface {
+        -ServerProcessingEngine engine
+        +ServerAppInterface(ServerProcessingEngine engine)
+        +readCommands() void
+    }
+
+    class ServerProcessingEngine {
+        -IndexStore store
+        -RPCServerWorker serverWorker
+        -Thread serverThread
+        +ServerProcessingEngine(IndexStore store)
+        +initialize(int serverPort) void
+        +shutdown() void
+    }
+
+    class RPCServerWorker {
+        -IndexStore store
+        -Server server
+        +RPCServerWorker(IndexStore store)
+        +run() void
+        +shutdown() void
+    }
+
+    %% Storage Classes
+    class IndexStore {
+        -HashMap~String,Long~ documentMap
+        -HashMap~String,ArrayList~DocFreqPair~~ termInvertedIndex
+        -ReentrantLock documentMapLock
+        -ReentrantLock termInvertedIndexLock
+        -long nextDocumentNumber
+        +IndexStore()
+        +putDocument(String documentPath) long
+        +getDocument(long documentNumber) String
+        +updateIndex(long documentNumber, HashMap~String,Long~ wordFrequencies) void
+        +lookupIndex(String term) ArrayList~DocFreqPair~
+    }
+
+    %% Result Classes
+    class IndexResult {
+        +double executionTime
+        +long totalBytesRead
+        +IndexResult(double executionTime, long totalBytesRead)
+    }
+
+    class SearchResult {
+        +double excutionTime
+        +ArrayList~DocPathFreqPair~ documentFrequencies
+        +SearchResult(double executionTime, ArrayList~DocPathFreqPair~ documentFrequencies)
+    }
+
+    %% Data Classes
+    class DocFreqPair {
+        +long documentNumber
+        +long wordFrequency
+        +DocFreqPair(long documentNumber, long wordFrequency)
+    }
+
+    class DocPathFreqPair {
+        +String documentPath
+        +long wordFrequency
+        +DocPathFreqPair(String documentPath, long wordFrequency)
+    }
+
+    %% External Classes
+    class ExecutorService {
+        <<external>>
+    }
+
+    %% Benchmark Relationships
+    FileRetrievalBenchmark ..> BenchmarkWorker : creates
+    FileRetrievalBenchmark --> ExecutorService : uses
+    BenchmarkWorker --> ClientProcessingEngine : uses
+    BenchmarkWorker ..|> Runnable : implements
+
+    %% Client-side Relationships
+    FileRetrievalClient ..> ClientProcessingEngine : creates
+    FileRetrievalClient ..> ClientAppInterface : creates
+    ClientAppInterface --> ClientProcessingEngine : uses
+    ClientProcessingEngine ..> IndexResult : creates
+    ClientProcessingEngine ..> SearchResult : creates
+
+    %% Server-side Relationships
+    FileRetrievalServer ..> IndexStore : creates
+    FileRetrievalServer ..> ServerProcessingEngine : creates
+    FileRetrievalServer ..> ServerAppInterface : creates
+    ServerAppInterface --> ServerProcessingEngine : uses
+    ServerProcessingEngine --> RPCServerWorker : creates and manages
+    ServerProcessingEngine --> IndexStore : uses
+
+    %% Data Relationships
+    IndexStore --> DocFreqPair : contains
+    SearchResult --> DocPathFreqPair : contains
+
+```
+
 ### Directory Structure
 
 After cloning this repository you will need to follow a specific directory structure to run the program.
